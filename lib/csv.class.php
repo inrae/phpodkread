@@ -102,7 +102,7 @@ class Csv
             for ($i = 0; $i < $nb; $i++) {
                 $dl[$this->header[$i]] = $line[$i];
             }
-            $data[] = $dl;
+            $data[$dl["KEY"]] = $dl;
         }
         return $data;
     }

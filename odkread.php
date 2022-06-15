@@ -74,7 +74,6 @@ if (!$eot) {
         foreach ($params as $key => $value) {
             $param["general"][substr($key, 2)] = $value;
         }
-
     }
 
     /**
@@ -121,11 +120,12 @@ if (!$eot) {
             /**
              * Treatment of each zip file
              */
-            if ($zip->open($sourcefolder . "/" .$file) !== true) {
+            if ($zip->open($sourcefolder . "/" . $file) !== true) {
                 throw new OdkException("Impossible to open the zip file $file");
             }
             $raw = array();
             $dataIndex = array();
+            $mainfile = "";
             /**
              * Extract all csv files
              */
@@ -135,18 +135,57 @@ if (!$eot) {
 
             $csvfiles = getListFromFolder($tempfolder, $param["general"]["csvextension"]);
             foreach ($csvfiles as $csvfile) {
-                $raw[$csvfile] = $csv->initFile($tempfolder."/".$csvfile);
+                $raw[$csvfile]["data"] = $csv->initFile($tempfolder . "/" . $csvfile);
+                /**
+                 * Extract the name of the object (tablename probably)
+                 */
+                $name = substr($csvfile, (strlen($param["general"]["csvextension"] + 1) * -1));
+                $postiret = strpos($name, "-");
+                !$postiret ? $raw[$csvfile]["name"] = $name : $raw[$csvfile]["name"] = substr($name, $postiret + 1);
                 /**
                  * Generate the index
                  */
-                foreach ($raw[$csvfile] as $line) {
-                    $dataIndex[] = array(
-                        "KEY"=>$line["KEY"],
-                        "PARENT_KEY"=>$line["PARENT_KEY"],
-                        "filename"=>$csvfile
-                    );
+                if (empty($raw[$csvfile]["data"][0]["PARENT_KEY"])) {
+                    $mainfile = $csvfile;
+                }
+                foreach ($raw[$csvfile]["data"] as $k => $line) {
+                    if (!empty($line["PARENT_KEY"])) {
+                        $dataIndex[$line["PARENT_KEY"]][] = array(
+                            "KEY" => $k,
+                            "filename" => $csvfile
+                        );
+                    }
                 }
             }
+            /**
+             * Generate the JSON file
+             */
+            /**
+             * Create the entries for the main table
+             */
+            if (empty($mainfile)) {
+                throw new OdkException("The main file could not be defined");
+            }
+            $datajs = array($raw[$mainfile][$name] => $raw[$mainfile["data"]]);
+            foreach ($datajs[$raw[$mainfile][$name]] as $k => $v) {
+                /**
+                 * Generate the uuid of the line
+                 */
+                $datajs[$raw[$mainfile][$name]][$k]["uuid"] = substr($v["KEY"], 5);
+                /**
+                 * Search if exists a child from the index array
+                 */
+                if (count($dataIndex[$v[$k]]) > 0) {
+                    foreach ($dataIndex[$v[$k]] as $dv) {
+                        $datajs[$raw[$mainfile][$name]][$k]["CHILDREN"][$raw[$dv["filename"]["name"]]][] = $raw[$dv["filename"]]["KEY"];
+                    }
+                }
+            }
+            $jsonContent = json_encode($datajs);
+            $jsonfilename = $raw[$mainfile][$name].".js";
+            $jsonfile = fopen($jsonfilename, 'w');
+            fwrite($jsonfile, $jsonContent);
+            fclose($jsonfile);
 
             /**
              * End of treatment of the zip file
@@ -158,7 +197,7 @@ if (!$eot) {
             if ($param["general"]["noMove"] != 1) {
                 rename($param["general"]["source"] . "/" . $file, $param["general"]["treated"] . "/" . $file);
             }
-            $message->set("Fichier $file traité");
+            $message->set("File $file treated - File $jsonfilename generated");
         }
     } catch (Exception $e) {
         $message->set($e->getMessage());
