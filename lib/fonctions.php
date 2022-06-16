@@ -1,7 +1,5 @@
 <?php
-class OdkException extends Exception
-{
-}
+
 /**
  * Fonction permettant de reorganiser les donnees des fichiers telecharges,
  * pour une utilisation directe en tableau

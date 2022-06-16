@@ -15,6 +15,7 @@ require_once 'lib/ObjetBDD_functions.php';
 require_once 'lib/ObjetBDD.php';
 require_once 'lib/station.class.php';
 require_once 'lib/coef.class.php';
+require_once 'lib/odk.class.php';
 $message = new Message();
 /**
  * End of Treatment
@@ -79,7 +80,7 @@ if (!$eot) {
     /**
      * Connexion à la base de données
      */
-    try {
+    /*    try {
         $pdo = connect($param["general"]["dsn"], $param["general"]["user"], $param["general"]["password"], $param["general"]["schema"]);
         $station = new Station($pdo);
         $coef = new Coef($pdo);
@@ -87,7 +88,7 @@ if (!$eot) {
         $message->set("Erreur de connexion à la base de données :");
         $message->set($e->getMessage());
         $eot = true;
-    }
+    }*/
 }
 if (!$eot) {
 
@@ -116,73 +117,34 @@ if (!$eot) {
         }
         $csv = new Csv();
         $zip = new ZipArchive();
+        $odk = new Odk($param);
         foreach ($files as $file) {
             /**
              * Treatment of each zip file
              */
             if ($zip->open($sourcefolder . "/" . $file) !== true) {
-                throw new OdkException("Impossible to open the zip file $file");
+                throw new OdkException("Unable to open the zip file $file");
             }
             $raw = array();
             $dataIndex = array();
-            $mainfile = "";
+            $amainfile = array();
             /**
              * Extract all csv files
              */
             if (!$zip->extractTo($tempfolder)) {
-                throw new OdkException("Impossible to extract the files from the zip file $file");
+                throw new OdkException("Unable to extract the files from the zip file $file");
             }
 
             $csvfiles = getListFromFolder($tempfolder, $param["general"]["csvextension"]);
             foreach ($csvfiles as $csvfile) {
-                $raw[$csvfile]["data"] = $csv->initFile($tempfolder . "/" . $csvfile);
-                /**
-                 * Extract the name of the object (tablename probably)
-                 */
-                $name = substr($csvfile, (strlen($param["general"]["csvextension"] + 1) * -1));
-                $postiret = strpos($name, "-");
-                !$postiret ? $raw[$csvfile]["name"] = $name : $raw[$csvfile]["name"] = substr($name, $postiret + 1);
-                /**
-                 * Generate the index
-                 */
-                if (empty($raw[$csvfile]["data"][0]["PARENT_KEY"])) {
-                    $mainfile = $csvfile;
-                }
-                foreach ($raw[$csvfile]["data"] as $k => $line) {
-                    if (!empty($line["PARENT_KEY"])) {
-                        $dataIndex[$line["PARENT_KEY"]][] = array(
-                            "KEY" => $k,
-                            "filename" => $csvfile
-                        );
-                    }
-                }
+                $odk->setCsvContent($csvfile, $csv->initFile($tempfolder . "/" . $csvfile));
             }
             /**
              * Generate the JSON file
              */
-            /**
-             * Create the entries for the main table
-             */
-            if (empty($mainfile)) {
-                throw new OdkException("The main file could not be defined");
-            }
-            $datajs = array($raw[$mainfile][$name] => $raw[$mainfile["data"]]);
-            foreach ($datajs[$raw[$mainfile][$name]] as $k => $v) {
-                /**
-                 * Generate the uuid of the line
-                 */
-                $datajs[$raw[$mainfile][$name]][$k]["uuid"] = substr($v["KEY"], 5);
-                /**
-                 * Search if exists a child from the index array
-                 */
-                if (count($dataIndex[$v[$k]]) > 0) {
-                    foreach ($dataIndex[$v[$k]] as $dv) {
-                        $datajs[$raw[$mainfile][$name]][$k]["CHILDREN"][$raw[$dv["filename"]["name"]]][] = $raw[$dv["filename"]]["KEY"];
-                    }
-                }
-            }
-            $jsonContent = json_encode($datajs);
-            $jsonfilename = $raw[$mainfile][$name].".js";
+
+            $jsonContent = $odk->generateJson();
+            $jsonfilename = $raw[$mainfile][$name] . ".js";
             $jsonfile = fopen($jsonfilename, 'w');
             fwrite($jsonfile, $jsonContent);
             fclose($jsonfile);
