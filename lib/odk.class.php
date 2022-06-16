@@ -14,13 +14,13 @@ class Odk
     $this->param = $param;
   }
 
-  function setCsvContent(string $csvfile, array $data)
+  function readCsvContent(string $csvfile, array $data)
   {
     $this->raw[$csvfile]["data"] = $data;
     /**
      * Extract the name of the object (tablename probably)
      */
-    $name = substr($csvfile, (strlen($this->param["general"]["csvextension"] + 1) * -1));
+    $name = substr($csvfile, 0, (strlen($this->param["general"]["csvextension"]) + 1) * -1);
     $postiret = strpos($name, "-");
     !$postiret ? $this->raw[$csvfile]["name"] = $name : $this->raw[$csvfile]["name"] = substr($name, $postiret + 1);
     /**

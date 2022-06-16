@@ -125,9 +125,6 @@ if (!$eot) {
             if ($zip->open($sourcefolder . "/" . $file) !== true) {
                 throw new OdkException("Unable to open the zip file $file");
             }
-            $raw = array();
-            $dataIndex = array();
-            $amainfile = array();
             /**
              * Extract all csv files
              */
@@ -137,14 +134,14 @@ if (!$eot) {
 
             $csvfiles = getListFromFolder($tempfolder, $param["general"]["csvextension"]);
             foreach ($csvfiles as $csvfile) {
-                $odk->setCsvContent($csvfile, $csv->initFile($tempfolder . "/" . $csvfile));
+                $odk->readCsvContent($csvfile, $csv->initFile($tempfolder . "/" . $csvfile,$param["general"]["separator"]));
             }
             /**
              * Generate the JSON file
              */
 
             $jsonContent = $odk->generateJson();
-            $jsonfilename = $raw[$mainfile][$name] . ".js";
+            $jsonfilename = "odkread-". date("YmdHis") . ".js";
             $jsonfile = fopen($jsonfilename, 'w');
             fwrite($jsonfile, $jsonContent);
             fclose($jsonfile);
