@@ -85,14 +85,18 @@ function getListFromFolder(string $foldername, string $extension): array
 function folderPurge(string $foldername, string $extension = "")
 {
     empty($extension) ? $withExtension = false : $withExtension = true;
-    while (false !== ($filename = readdir($foldername))) {
-        if (is_file($filename)) {
-            if ($withExtension) {
-                $fileext = (false === $pos = strrpos($filename, '.')) ? '' : strtolower(substr($filename, $pos + 1));
-            }
-            if (!$withExtension || $fileext == $extension) {
-                unlink($foldername . "/" . $filename);
+    $folder = opendir($foldername);
+    if ($folder) {
+        while (false !== ($filename = readdir($folder))) {
+            if (is_file($foldername."/".$filename)) {
+                if ($withExtension) {
+                    $fileext = (false === $pos = strrpos($filename, '.')) ? '' : strtolower(substr($filename, $pos + 1));
+                }
+                if (!$withExtension || $fileext == $extension) {
+                    unlink($foldername . "/" . $filename);
+                }
             }
         }
+        closedir($folder);
     }
 }

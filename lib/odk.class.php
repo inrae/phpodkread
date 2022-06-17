@@ -4,10 +4,11 @@ class OdkException extends Exception
 }
 class Odk
 {
-  private array $raw;
+  public array $raw;
   public array $param;
-  private array $mainfile = array();
-  private array $dataIndex = array();
+  public array $structuredData;
+  public array $mainfile = array();
+  public array $dataIndex = array();
 
   function __construct(array $param)
   {
@@ -26,10 +27,13 @@ class Odk
     /**
      * Generate the index
      */
-    if (empty($this->raw[$csvfile]["data"][0]["PARENT_KEY"])) {
-      $this->mainfile[] = $csvfile;
+    foreach ($data as $line) {
+      if (empty($line["PARENT_KEY"])) {
+        $this->mainfile[] = $csvfile;
+        break;
+      }
     }
-    foreach ($this->raw[$csvfile]["data"] as $key => $line) {
+    foreach ($data as $key => $line) {
       if (!empty($line["PARENT_KEY"])) {
         $this->dataIndex[$line["PARENT_KEY"]][] = array(
           "KEY" => $key,
@@ -39,31 +43,28 @@ class Odk
     }
   }
 
-  function generateJson(): string
+  function generateStructuredData()
   {
+    $this->structuredData = array();
     /**
      * Create the entries for the main tables
      */
-    $datajs = array();
     foreach ($this->mainfile as $mainfile) {
-      if (empty($mainfile)) {
-        throw new OdkException("The main file could not be defined");
-      }
-      $datajs = array($this->raw[$mainfile]["name"] => $this->raw[$mainfile["data"]]);
-      foreach ($datajs[$this->raw[$mainfile]["name"]] as $key => $v) {
+      $name = $this->raw[$mainfile]["name"];
+      $this->structuredData[$name] = $this->raw[$mainfile]["data"];
+      foreach ($this->structuredData[$name] as $key => $v) {
         /**
          * Generate the uuid of the line
          */
-        $datajs[$this->raw[$mainfile]["name"]][$key]["uuid"] = substr($v["KEY"], 5);
+        $this->structuredData[$name][$key]["uuid"] = substr($v["KEY"], 5);
         /**
          * Search if exists a child from the index array
          */
         if (count($this->dataIndex[$key]) > 0) {
-          $datajs[$this->raw[$mainfile]["name"]][$key]["CHILDREN"] = $this->getChildren($key);
+          $this->structuredData[$name][$key]["CHILDREN"] = $this->getChildren($key);
         }
       }
     }
-    return json_encode($datajs);
   }
 
   function getChildren($key)
@@ -76,9 +77,9 @@ class Odk
       $filename = $v["filename"];
       $childKey = $v["KEY"];
       $name = $this->raw[$filename]["name"];
-      $dataChild = $this->raw["filename"][$childKey];
+      $dataChild = $this->raw[$filename]["data"][$childKey];
       if (count($this->dataIndex[$childKey]) > 0) {
-        $dataChild["CHILDREN"][] = $this->getChildren($childKey);
+        $dataChild["CHILDREN"] = $this->getChildren($childKey);
       }
       $children[$name][] = $dataChild;
     }

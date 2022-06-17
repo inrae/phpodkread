@@ -134,35 +134,48 @@ if (!$eot) {
 
             $csvfiles = getListFromFolder($tempfolder, $param["general"]["csvextension"]);
             foreach ($csvfiles as $csvfile) {
-                $odk->readCsvContent($csvfile, $csv->initFile($tempfolder . "/" . $csvfile,$param["general"]["separator"]));
+                $odk->readCsvContent($csvfile, $csv->initFile($tempfolder . "/" . $csvfile, $param["general"]["separator"]));
             }
             /**
              * Generate the JSON file
              */
 
-            $jsonContent = $odk->generateJson();
-            $jsonfilename = "odkread-". date("YmdHis") . ".js";
-            $jsonfile = fopen($jsonfilename, 'w');
-            fwrite($jsonfile, $jsonContent);
-            fclose($jsonfile);
-
+            $odk->generateStructuredData();
+            if ($param["general"]["exportjson"] == 1) {
+                $jsonfilename = "odkread-" . date("YmdHis") . ".js";
+                $jsonfile = fopen($jsonfilename, 'w');
+                fwrite($jsonfile, json_encode($odk->structuredData));
+                fclose($jsonfile);
+                $message->set("File $jsonfilename generated");
+            }
+            if ($param["general"]["displayfirstline"] == 1) {
+                foreach ($odk->structuredData as $key => $row) {
+                    echo "$key" . PHP_EOL;
+                    foreach ($row as $r1) {
+                        print_r($r1);
+                        break;
+                    }
+                    break;
+                }
+            }
             /**
              * End of treatment of the zip file
              */
             /**
              * Purge the temp folder
              */
-            folderPurge($tempfolder);
+            if ($param["general"]["tempfolderpurge"] == 1) {
+                folderPurge($tempfolder, $param["general"]["csvextension"]);
+            }
             if ($param["general"]["noMove"] != 1) {
                 rename($param["general"]["source"] . "/" . $file, $param["general"]["treated"] . "/" . $file);
             }
-            $message->set("File $file treated - File $jsonfilename generated");
+            $message->set("File $file treated");
         }
     } catch (Exception $e) {
         $message->set($e->getMessage());
     }
 }
-
 /**
  * Display messages
  */
