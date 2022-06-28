@@ -94,30 +94,18 @@ if (!$eot) {
 
     try {
         /**
-         * Verify if the temp folder exists and open it
-         */
-        $temp = opendir($param["general"]["temp"]);
-        if (!file_exists($param["general"]["temp"])) {
-            if (mkdir($param["general"]["temp"]) === false) {
-                throw new OdkException("Impossible to create the temp folder");
-            }
-        }
-        $temp = opendir($param["general"]["temp"]);
-        if (!$temp) {
-            throw new OdkException("Impossible to open the temp folder");
-        }
-        /**
          * Get the list of files to treat
          */
-        $sourcefolder = $param["general"]["source"];
-        $tempfolder = $param["general"]["temp"];
-        $files = getListFromFolder($sourcefolder, $param["general"]["zipextension"]);
+        $odk = new Odk($param);
+        $csv = new Csv();
+        $zip = new ZipArchive();
+        $sourcefolder = $odk->sanitizePath($param["general"]["source"]);
+        $tempfolder = $odk->sanitizePath($param["general"]["temp"]);
+        $files = $odk->getListFromFolder($sourcefolder, $param["general"]["zipextension"]);
         if (count($files) == 0) {
             throw new OdkException("No files to treat in $sourcefolder");
         }
-        $csv = new Csv();
-        $zip = new ZipArchive();
-        $odk = new Odk($param);
+
         foreach ($files as $file) {
             /**
              * Treatment of each zip file
@@ -132,7 +120,7 @@ if (!$eot) {
                 throw new OdkException("Unable to extract the files from the zip file $file");
             }
 
-            $csvfiles = getListFromFolder($tempfolder, $param["general"]["csvextension"]);
+            $csvfiles = $odk->getListFromFolder($tempfolder, $param["general"]["csvextension"]);
             foreach ($csvfiles as $csvfile) {
                 $odk->readCsvContent($csvfile, $csv->initFile($tempfolder . "/" . $csvfile, $param["general"]["separator"]));
             }
@@ -165,10 +153,10 @@ if (!$eot) {
              * Purge the temp folder
              */
             if ($param["general"]["tempfolderpurge"] == 1) {
-                folderPurge($tempfolder, $param["general"]["csvextension"]);
+                $odk->tempPurge();
             }
             if ($param["general"]["noMove"] != 1) {
-                rename($param["general"]["source"] . "/" . $file, $param["general"]["treated"] . "/" . $file);
+                $odk->moveFile($file);
             }
             $message->set("File $file treated");
         }

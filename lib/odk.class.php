@@ -2,6 +2,13 @@
 class OdkException extends Exception
 {
 }
+
+interface Database {
+  function setConnection (PDO $connection);
+  function setData(array $data);
+  function getTreatedNumber():int;
+}
+
 class Odk
 {
   public array $raw;
@@ -9,10 +16,92 @@ class Odk
   public array $structuredData;
   public array $mainfile = array();
   public array $dataIndex = array();
+  private $tempPath, $source, $dest;
+  private $dc ; # Database class
 
+  /**
+   * Constructor
+   *
+   * @param array $param: content of param.ini
+   */
   function __construct(array $param)
   {
     $this->param = $param;
+    $this->param["general"]["basedir"] = str_replace("..", "", $this->param["general"]["basedir"]);
+    $this->tempPath = $this->sanitizePath($this->param["general"]["temp"]);
+    if (!file_exists($this->tempPath)) {
+      if (mkdir($this->tempPath) === false) {
+        throw new OdkException("Unable to create the temp folder");
+      }
+    }
+  }
+
+  function sanitizePath($p)
+  {
+    $p = str_replace("../", "", $p);
+    return realpath($this->param["general"]["basedir"] . "/" . $p);
+  }
+
+  /**
+   * Get the list of files in an folder corresponding to an extension
+   *
+   * @param string $foldername
+   * @param string $extension
+   * @return array
+   */
+  function getListFromFolder(string $foldername, string $extension): array
+  {
+    $folder = opendir($foldername);
+    if (!$folder) {
+      throw new OdkException("The folder $foldername don't exists");
+    }
+    $files = array();
+    while (false !== ($filename = readdir($folder))) {
+      /**
+       * Extract the extension
+       */
+
+      $fileext = (false === $pos = strrpos($filename, '.')) ? '' : strtolower(substr($filename, $pos + 1));
+      if ($extension == $fileext) {
+        $files[] = $filename;
+      }
+    }
+    closedir($folder);
+    return $files;
+  }
+
+  /**
+   * Purge a folder of all contents files
+   *
+   * @param string $foldername
+   * @param string $extension
+   * @return void
+   */
+  function tempPurge()
+  {
+    $extension = $this->param["general"]["csvextension"];
+    empty($extension) ? $withExtension = false : $withExtension = true;
+    $folder = opendir($this->tempPath);
+    if ($folder) {
+      while (false !== ($filename = readdir($folder))) {
+        if (is_file($this->tempPath . "/" . $filename)) {
+          if ($withExtension) {
+            $fileext = (false === $pos = strrpos($filename, '.')) ? '' : strtolower(substr($filename, $pos + 1));
+          }
+          if (!$withExtension || $fileext == $extension) {
+            unlink($this->tempPath . "/" . $filename);
+          }
+        }
+      }
+      closedir($folder);
+    }
+  }
+
+  function moveFile($filename)
+  {
+    $from = $this->sanitizePath($this->param["general"]["source"]);
+    $to = $this->sanitizePath($this->param["general"]["dest"]);
+    rename($from . "/" . $filename, $to . "/" . $filename);
   }
 
   function readCsvContent(string $csvfile, array $data)
@@ -84,5 +173,29 @@ class Odk
       $children[$name][] = $dataChild;
     }
     return $children;
+  }
+
+  function writeDataDB(string $classpath, string $className, PDO $connection):int {
+    $path = $this->sanitizePath($classpath);
+    if (!file_exists($path)) {
+      throw new OdkException("The file $classpath not exists or is not readable");
+    }
+    $this->dc = new $$className ();
+    /**
+     * Verify the implements
+     */
+    $ok = false;
+    foreach (class_implements($this->dc) as $implementName) {
+      if ($implementName == "Database") {
+        $ok = true;
+        break;
+      }
+    }
+    if (!$ok) {
+      throw new OdkException("The class $className not implements Database");
+    }
+    $this->dc->setConnection($connection);
+    $this->dc->setData($this->structuredData);
+    return $this->dc->getTreatedNumber();
   }
 }

@@ -11,16 +11,9 @@ class ImportException extends Exception
  */
 class Csv
 {
-
     private $separator = ";";
-
-    private $utf8_encode = false;
-
     private $handle;
-
     private $header = array();
-
-
 
     /**
      * Init file function
@@ -34,9 +27,6 @@ class Csv
      */
     function initFile($filename, $separator = ";",  $headerLine = 1)
     {
-        if ($separator == "tab" || $separator == "t") {
-            $separator = "\t";
-        }
         switch ($separator) {
             case "tab":
             case "t":
