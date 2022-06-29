@@ -1,0 +1,102 @@
+Array
+(
+    [SubmissionDate] => 2022-06-03T15:23:14.746Z
+    [sampling-campaign_number] => 1
+    [sampling-site_id] => 3
+    [sampling-fishing_date] => 2021-07-07
+    [sampling-engine_position_id] => 1
+    [sampling-depth_id] =>
+    [sampling-operators] => CP
+    [sampling-sample_number] => 2
+    [sampling-sorttype] => 1
+    [sampling-sort_date] => 2021-07-07
+    [sampling-comment] =>
+    [others_catch-shrimp] =>
+    [others_catch-gamare] =>
+    [others_catch-mysidaceae] =>
+    [others_catch-crab] =>
+    [others_catch-gelatinous] =>
+    [others_catch-others] =>
+    [meta-instanceID] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695
+    [KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695
+    [SubmitterID] => 217
+    [SubmitterName] => Dileme - tri en labo
+    [AttachmentsPresent] => 0
+    [AttachmentsExpected] => 0
+    [Status] =>
+    [ReviewState] =>
+    [DeviceID] =>
+    [Edits] =>
+    [uuid] => 88fd02d9-6938-4bb4-84e8-4af0961f3695
+    [CHILDREN] => Array
+        (
+            [sample_taxon] => Array
+                (
+                    [0] => Array
+                        (
+                            [taxon_id] => 721
+                            [total_number] => 4
+                            [comment] =>
+                            [development_stage_id] => 1
+                            [PARENT_KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695
+                            [KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]
+                            [CHILDREN] => Array
+                                (
+                                    [individual] => Array
+                                        (
+                                            [0] => Array
+                                                (
+                                                    [total_length] => 7.34
+                                                    [individual_code] =>
+                                                    [PARENT_KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]
+                                                    [KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]/individual[1]
+                                                )
+                                            [1] => Array
+                                                (
+                                                    [total_length] => 8.6
+                                                    [individual_code] =>
+                                                    [PARENT_KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]
+                                                    [KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]/individual[2]
+                                                )
+                                            [2] => Array
+                                                (
+                                                    [total_length] => 8.21
+                                                    [individual_code] =>
+                                                    [PARENT_KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]
+                                                    [KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]/individual[3]
+                                                )
+                                            [3] => Array
+                                                (
+                                                    [total_length] => 7.79
+                                                    [individual_code] =>
+                                                    [PARENT_KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]
+                                                    [KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[1]/individual[4]
+                                                )
+                                        )
+                                )
+                        )
+                    [1] => Array
+                        (
+                            [taxon_id] => 721
+                            [total_number] => 1
+                            [comment] =>
+                            [development_stage_id] => 2
+                            [PARENT_KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695
+                            [KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[2]
+                            [CHILDREN] => Array
+                                (
+                                    [individual] => Array
+                                        (
+                                            [0] => Array
+                                                (
+                                                    [total_length] => 11.86
+                                                    [individual_code] =>
+                                                    [PARENT_KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[2]
+                                                    [KEY] => uuid:88fd02d9-6938-4bb4-84e8-4af0961f3695/biometry/sample_taxon[2]/individual[1]
+                                                )
+                                        )
+                                )
+                        )
+                )
+        )
+)

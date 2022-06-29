@@ -23,13 +23,25 @@ function formatFiles($attributName = "documentName")
     } else $files[] = $fdata;
     return $files;
 }
-/**
- * Affiche le nom et le contenu d'une variable
- * @param array $tableau
- */
-function printr($tableau, $mode_dump = 0)
+
+function test($content = "")
 {
-    if ($mode_dump == 1) {
+    global $testOccurrence;
+    echo "test $testOccurrence : $content" . PHP_EOL;
+    $testOccurrence++;
+}
+/**
+ * Display the content of a variable
+ *
+ * @param any $tableau
+ * @param integer $mode_dump
+ * @param bool $force
+ * @return void
+ */
+function printr($tableau, $mode_dump = false)
+{
+
+    if ($mode_dump) {
         var_dump($tableau);
     } else {
         if (is_array($tableau)) {
@@ -38,12 +50,18 @@ function printr($tableau, $mode_dump = 0)
             echo $tableau;
         }
     }
-    echo PHP_EOL;
+    echo phpeol();
 }
-
-function test($content = "")
+/**
+ * Generate a line return with <br> or PHP_EOL
+ *
+ * @return void
+ */
+function phpeol()
 {
-    global $testOccurrence;
-    echo "test $testOccurrence : $content" . PHP_EOL;
-    $testOccurrence++;
+    if (PHP_SAPI == "cli") {
+        return PHP_EOL;
+    } else {
+        return "<br>";
+    }
 }
