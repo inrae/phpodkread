@@ -10,71 +10,59 @@ class Db
   private string $lastSql;
   private $stmt;
   private $lastResultExec;
-  public $modeDebug = false;
+  public bool $modeDebug = false;
+  public $quote = "'";
+  public array $structure = array();
 
-  function writeData(string $tableAlias, $data): ?int
+  function writeData(string $schemaName, string $tableName, array $data, string $keyName): ?int
   {
     if (!$data) {
-      throw new ExportException("data are empty for $tableAlias");
+      throw new ExportException("data are empty for $tableName");
     }
-    $model = $this->model[$tableAlias];
-    $tableName = $model["tableName"];
-    $structure = $this->structure[$tableName];
-    if (!is_array($structure) || count($structure) == 0) {
-      throw new ExportException("The structure of the table $tableName is unknown");
-    }
-    $tkeyName = $model["technicalKey"];
-    $pkeyName = $model["parentKey"];
-    $bkeyName = $model["businessKey"];
-    $skeyName = $model["tablenn"]["secondaryParentKey"];
     $newKey = null;
     $dataSql = array();
     $comma = "";
     $mode = "insert";
-    if ($data[$tkeyName] > 0) {
+    /**
+     * Initialize or verify the structure of the table
+     */
+    $this->getStructure($schemaName, $tableName);
+    if ($data[$$keyName] > 0) {
       /**
        * Search if the record exists
        */
-      $sql = "select " . $this->quote . $tkeyName . $this->quote
-        . " as key from " . $this->quote . $tableName . $this->quote
-        . " where " . $this->quote . $tkeyName . $this->quote
+      $sql = "select  $this->quote$keyName$this->quote as key "
+        . "from  $this->quote$schemaName$this->quote.$this->quote$tableName$this->quote "
+        . " where  $this->quote$keyName$this->quote"
         . " = :key";
-      $result = $this->execute($sql, array("key" => $data[$tkeyName]));
+      $result = $this->execute($sql, array("key" => $data[$keyName]));
       if (!empty($result[0]["key"])) {
         $mode = "update";
       }
     }
-    $model["istablenn"] == 1 ? $returning = "" : $returning = " RETURNING $tkeyName";
+    $table = $schemaName . "." . $tableName;
     /**
      * update
      */
     if ($mode == "update") {
-      $sql = "update $this->quote$tableName$this->quote set ";
+      $sql = "update $this->quote$table$this->quote set ";
       foreach ($data as $field => $value) {
-        if (
-          is_array($structure["booleanFields"])
-          && in_array($field, $structure["booleanFields"]) && !$value
-        ) {
-          $value = "false";
+        /**
+         * Verifiy if the column exists in the table
+         */
+        if (!empty($this->structure[$schemaName][$tableName][$field])) {
+          if ($this->structure[$schemaName][$tableName][$field]["type"] == "boolean" && !$value) {
+            $value = "false";
+          }
+          if ($field != $keyName) {
+            $sql .= "$comma$this->quote$field$this->quote = :$field";
+            $comma = ", ";
+            $dataSql[$field] = $value;
+          }
         }
-        if ($field != $tkeyName) {
-          $sql .= "$comma$this->quote$field$this->quote = :$field";
-          $comma = ", ";
-          $dataSql[$field] = $value;
-        }
       }
-      if (!empty($pkeyName) && !empty($skeyName)) {
-        $where = " where $this->quote$pkeyName$this->quote = :$pkeyName and $this->quote$skeyName$this->quote = :$skeyName";
-      } else {
-        $where = " where $this->quote$tkeyName$this->quote = :$tkeyName";
-        $dataSql[$tkeyName] = $data[$tkeyName];
-      }
-      if (!isset($where)) {
-        throw new ExportException(
-          "The where clause can't be construct for the table $tableName"
-        );
-      }
-      $sql .= $where;
+      $sql .= " where $this->quote$keyName$this->quote = :$keyName";
+      $dataSql[$keyName] = $data[$keyName];
     } else {
       /**
        * insert
@@ -83,74 +71,29 @@ class Db
       $cols = "(";
       $values = "(";
       foreach ($data as $field => $value) {
-        if (!($field == $tkeyName && $bkeyName != $tkeyName)) {
-          if (
-            is_array($structure["booleanFields"])
-            && in_array($field, $structure["booleanFields"]) && !$value
-          ) {
+        if (($field != $keyName)) {
+          if ($this->structure[$schemaName][$tableName][$field]["type"] == "boolean" && !$value) {
             $value = "false";
           }
-          if (!($model["istablenn"] == 1 && $field == $model["tablenn"]["tableAlias"])) {
-            $cols .= $comma . $this->quote . $field . $this->quote;
-            $values .= $comma . ":$field";
-            $dataSql[$field] = $value;
-            $comma = ", ";
-          }
+          $cols .= $comma . $this->quote . $field . $this->quote;
+          $values .= $comma . ":$field";
+          $dataSql[$field] = $value;
+          $comma = ", ";
         }
       }
       $cols .= ")";
       $values .= ")";
-      $sql = "insert into $this->quote$tableName$this->quote $cols values $values $returning";
+      $sql = "insert into $this->quote$schemaName$this->quote.$this->quote$tableName$this->quote $cols values $values"
+        . " returning $keyName";
     }
     $result = $this->execute($sql, $dataSql);
-    if ($model["istablenn"] == 1) {
-      $newKey = null;
-    } else if ($mode == "insert") {
-      $newKey = $result[0][$tkeyName];
+    if ($mode == "insert") {
+      $newKey = $result[0][$keyName];
     } else {
-      $newKey = $data[$tkeyName];
+      $newKey = $data[$keyName];
     }
     if ($this->modeDebug) {
       printr("newkey: " . $newKey);
-    }
-    /**
-     * Get the binary data
-     */
-    if (
-      strlen($newKey) > 0
-      && is_array($structure["binaryFields"])
-      && count($structure["binaryFields"]) > 0
-    ) {
-      if (empty($data[$bkeyName])) {
-        throw new ExportException(
-          "The businessKey is empty for the table $tableName and the binary data can't be imported"
-        );
-      }
-      if (!is_dir($this->binaryFolder)) {
-        throw new ExportException(
-          "The folder that contains binary files don't exists (" . $this->binaryFolder . ")"
-        );
-      }
-      foreach ($structure["binaryFields"] as $binaryField) {
-        $filename = $this->binaryFolder . "/" . $tableName . "-" . $binaryField . "-" . $data[$bkeyName] . ".bin";
-        if (file_exists($filename)) {
-          $fp = fopen($filename, 'rb');
-          if (!$fp) {
-            throw new ExportException("The file $filename can't be opened");
-          }
-          $sql = "update  $this->quote$tableName$this->quote set ";
-          $sql .= "$this->quote$binaryField$this->quote = :binaryFile";
-          $sql .= " where $this->quote$tkeyName$this->quote = :key";
-          $this->prepare($sql);
-          $this->stmt->bindParam(":binaryFile", $fp, PDO::PARAM_LOB);
-          $this->stmt->bindParam(":key", $newKey);
-          if (!$this->stmt->execute()) {
-            throw new ExportException("Error when execute the request" . phpeol()
-              . $sql . phpeol()
-              . $this->stmt->errorInfo()[2]);
-          };
-        }
-      }
     }
     return $newKey;
   }
@@ -206,6 +149,54 @@ class Db
         throw new ExportException("This request can't be prepared:" . phpeol() . $sql);
       }
       $this->lastSql = $sql;
+    }
+  }
+
+  /**
+   * Prepare the list of columns of a table, with column types and keys, comments, etc.
+   *
+   * @param string $schemaName
+   * @param string $tableName
+   */
+  function getStructure(string $schemaName, string $tableName)
+  {
+    if (empty($this->structure[$schemaName][$tableName])) {
+      $sql = 'SELECT pg_attribute.attname AS field,
+            pg_catalog.format_type(pg_attribute.atttypid,pg_attribute.atttypmod) AS "type",
+          (SELECT col_description(pg_attribute.attrelid,pg_attribute.attnum)) AS comment,
+          CASE pg_attribute.attnotnull
+            WHEN FALSE THEN 0
+            ELSE 1
+          END AS "notnull",
+          pg_constraint.conname AS "key",
+          pc2.conname AS ckey
+        FROM pg_tables
+        JOIN pg_namespace ON (pg_namespace.nspname = pg_tables.schemaname)
+        JOIN pg_class
+          ON (pg_class.relname = pg_tables.tablename
+          AND pg_class.relnamespace = pg_namespace.oid)
+        JOIN pg_attribute
+        ON pg_class.oid = pg_attribute.attrelid
+        AND pg_attribute.attnum > 0
+        LEFT JOIN pg_constraint
+            ON pg_constraint.contype = \'p\'::"char"
+            AND pg_constraint.conrelid = pg_class.oid
+            AND (pg_attribute.attnum = ANY (pg_constraint.conkey))
+        LEFT JOIN pg_constraint AS pc2
+            ON pc2.contype = \'f\'::"char"
+            AND pc2.conrelid = pg_class.oid
+            AND (pg_attribute.attnum = ANY (pc2.conkey))
+        WHERE pg_attribute.atttypid <> 0::OID
+        and schemaname = :schemaname
+        and tablename = :tablename
+        ORDER BY schemaname, tablename, attnum ASC';
+      $result = $this->execute(
+        $sql,
+        array("schemaname" => $schemaName, "tablename" => $tableName)
+      );
+      foreach ($result as $row) {
+        $this->structure[$schemaName][$tableName][$row["field"]] = $row;
+      }
     }
   }
 }
