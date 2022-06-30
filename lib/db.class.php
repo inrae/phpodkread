@@ -7,17 +7,17 @@
 class Db
 {
   public PDO $connection;
-  private string $lastSql;
-  private $stmt;
-  private $lastResultExec;
+  private string $lastSql = "";
+  private PDOStatement $stmt;
+  public bool $lastResultExec = false;
   public bool $modeDebug = false;
-  public $quote = "'";
+  public $quote = '"';
   public array $structure = array();
 
   function writeData(string $schemaName, string $tableName, array $data, string $keyName): ?int
   {
     if (!$data) {
-      throw new ExportException("data are empty for $tableName");
+      throw new ODKException("data are empty for $tableName");
     }
     $newKey = null;
     $dataSql = array();
@@ -27,7 +27,7 @@ class Db
      * Initialize or verify the structure of the table
      */
     $this->getStructure($schemaName, $tableName);
-    if ($data[$$keyName] > 0) {
+    if ($data[$keyName] > 0) {
       /**
        * Search if the record exists
        */
@@ -71,7 +71,7 @@ class Db
       $cols = "(";
       $values = "(";
       foreach ($data as $field => $value) {
-        if (($field != $keyName)) {
+        if ($field != $keyName && isset($this->structure[$schemaName][$tableName][$field])) {
           if ($this->structure[$schemaName][$tableName][$field]["type"] == "boolean" && !$value) {
             $value = "false";
           }
@@ -111,25 +111,29 @@ class Db
       printr($sql);
       printr($data);
     }
-    $result = null;
+    $result = array();
     try {
       $this->prepare($sql);
       $this->lastResultExec = $this->stmt->execute($data);
       if ($this->lastResultExec) {
         $result = $this->stmt->fetchAll(PDO::FETCH_ASSOC);
       } else {
-        $sdata = "";
-        foreach ($data as $key => $value) {
-          $sdata .= "$key:$value" . phpeol();
+        if ($this->modeDebug) {
+        printr($this->stmt->errorInfo());
         }
-        throw new ExportException("Error when execute the request" . phpeol()
-          . $sql . phpeol()
-          . $sdata
-          . $this->stmt->errorInfo()[2]);
+        throw new ODKException($this->stmt->errorInfo()[0]);
       }
     } catch (PDOException $e) {
       $this->lastResultExec = false;
-      throw new OdkException($e->getMessage());
+      $sdata = "";
+        foreach ($data as $key => $value) {
+          $sdata .= "$key:$value" . phpeol();
+        }
+      throw new ODKException("Error when execute the request" . phpeol()
+          . $sql . phpeol()
+          . $sdata
+          . $this->stmt->errorInfo()[2].phpeol()
+          . $e->getMessage());
     }
     return $result;
   }
@@ -146,7 +150,7 @@ class Db
     if ($this->lastSql != $sql) {
       $this->stmt = $this->connection->prepare($sql);
       if (!$this->stmt) {
-        throw new ExportException("This request can't be prepared:" . phpeol() . $sql);
+        throw new ODKException("This request can't be prepared:" . phpeol() . $sql);
       }
       $this->lastSql = $sql;
     }
@@ -160,7 +164,7 @@ class Db
    */
   function getStructure(string $schemaName, string $tableName)
   {
-    if (empty($this->structure[$schemaName][$tableName])) {
+    if (count($this->structure[$schemaName][$tableName]) == 0) {
       $sql = 'SELECT pg_attribute.attname AS field,
             pg_catalog.format_type(pg_attribute.atttypid,pg_attribute.atttypmod) AS "type",
           (SELECT col_description(pg_attribute.attrelid,pg_attribute.attnum)) AS comment,

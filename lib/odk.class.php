@@ -180,7 +180,8 @@ class Odk
     if (!file_exists($path)) {
       throw new OdkException("The file $classpath not exists or is not readable");
     }
-    $this->dc = new $$className ();
+    include_once $path;
+    $this->dc = new $className ();
     /**
      * Verify the implements
      */

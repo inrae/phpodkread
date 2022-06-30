@@ -146,6 +146,17 @@ if (!$eot) {
                     break;
                 }
             }
+            if ($param["general"]["writedataindb"] == 1) {
+                $pdo = new PDO(
+                    $param["database"]["dsn"],
+                    $param["database"]["login"],
+                    $param["database"]["password"]
+                );
+                $pdo->beginTransaction();
+                $nbTreated = $odk->writeDataDB($param["database"]["classpath"], $param["database"]["className"], $pdo);
+                $message->set("Number of forms treated: $nbTreated");
+                $pdo->commit();
+            }
             /**
              * End of treatment of the zip file
              */
@@ -162,6 +173,9 @@ if (!$eot) {
         }
     } catch (Exception $e) {
         $message->set($e->getMessage());
+        if (isset($pdo)) {
+            $pdo->rollBack();
+        }
     }
 }
 /**
