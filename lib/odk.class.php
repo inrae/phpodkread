@@ -59,8 +59,7 @@ class Odk
 
   function sanitizePath($p)
   {
-    $p = str_replace("../", "", $p);
-    return realpath($this->param["basedir"] . "/" . $p);
+    return ($this->param["basedir"]. "/". str_replace("../", "", $p));
   }
 
   /**

@@ -118,8 +118,12 @@ if (!$eot) {
             $odk->generateStructuredData();
             if ($param["general"]["exportjson"] == 1) {
                 $exportfolder = $odk->sanitizePath($param["general"]["export"]);
+                printr($exportfolder);
+                if (!$odk->verifyFolder($exportfolder)) {
+                    throw new OdkException("Unable to open or create the export folder");
+                }
                 $jsonfilename = "odkread-" . date("YmdHis") . ".js";
-                $jsonfile = fopen($jsonfilename, 'w');
+                $jsonfile = fopen($exportfolder."/".$jsonfilename, 'w');
                 fwrite($jsonfile, json_encode($odk->structuredData));
                 fclose($jsonfile);
                 $message->set("File $jsonfilename generated");

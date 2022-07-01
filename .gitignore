@@ -1,3 +1,6 @@
 /temp/*
 /import/*
 /*.js
+/param.ini
+/export/*
+/treated/*
