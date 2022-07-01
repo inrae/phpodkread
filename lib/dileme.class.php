@@ -120,6 +120,9 @@ class Dileme extends Db implements Database
       foreach ($sampling["CHILDREN"]["sample_taxon"] as $dst) {
         $dst["sample_id"] = $dsample["sample_id"];
         $dst["sample_taxon_id"] = 0;
+        if (empty ($dst["development_stage_id"])) {
+          unset ($dst["development_stage_id"]);
+        }
         $dst["sample_taxon_id"] = $this->writeData("dileme", "sample_taxon", $dst, "sample_taxon_id");
         /**
          * Treatment of each individual

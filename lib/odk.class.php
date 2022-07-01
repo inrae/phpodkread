@@ -216,6 +216,7 @@ class Odk
     if (!$ok) {
       throw new OdkException("The class $className not implements Database");
     }
+    $this->dc->setDebug($this->param["debug"]);
     $this->dc->setConnection($connection);
     $this->dc->setData($this->structuredData);
     return $this->dc->getTreatedNumber();

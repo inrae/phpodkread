@@ -128,7 +128,6 @@ if (!$eot) {
             $odk->generateStructuredData();
             if ($param["general"]["exportjson"] == 1) {
                 $exportfolder = $odk->sanitizePath($param["general"]["export"]);
-                printr($exportfolder);
                 if (!$odk->verifyFolder($exportfolder)) {
                     throw new OdkException("Unable to open or create the export folder");
                 }
