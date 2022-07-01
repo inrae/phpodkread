@@ -7,14 +7,9 @@
  */
 
 error_reporting(E_ERROR);
-require_once 'lib/Message.php';
-require_once 'lib/fonctions.php';
+require_once 'lib/message.php';
+require_once 'lib/functions.php';
 require_once 'lib/csv.class.php';
-require_once 'lib/vue.class.php';
-require_once 'lib/ObjetBDD_functions.php';
-require_once 'lib/ObjetBDD.php';
-require_once 'lib/station.class.php';
-require_once 'lib/coef.class.php';
 require_once 'lib/odk.class.php';
 $message = new Message();
 /**
@@ -25,27 +20,42 @@ $eot = false;
 /**
  * Default options
  */
-$message->set("ODKread: read the contents of the files downloaded from the ODK-Collect server");
+$message->set("PHPODKread: read the contents of the files downloaded from the ODK-Collect server");
 $message->set("Licence : MIT. Copyright © 2022 - Éric Quinton, INRAE - EABX - FR33 Cestas");
 /**
  * Traitement des options de la ligne de commande
  */
 if ($argv[1] == "-h" || $argv[1] == "--help") {
 
-    $message->set("Options :");
-    $message->set("-h ou --help : ce message d'aide");
-    $message->set("--station=stationName : nom de la station (obligatoire). Le nom doit correspondre à une section dans le fichier ini");
-    $message->set("--dsn=pgsql:host=server;dbname=database;sslmode=require : PDO dsn (adresse de connexion au serveur selon la nomenclature PHP-PDO)");
-    $message->set("--login= : nom du login de connexion");
-    $message->set("--password= : mot de passe associé");
-    $message->set("--schema=public : nom du schéma contenant les tables");
-    $message->set("--source=source : nom du dossier contenant les fichiers source");
-    $message->set("--treated=treated : nom du dossier où les fichiers sont déplacés après traitement");
-    $message->set("--param=param.ini : nom du fichier de paramètres (ne pas modifier sans bonne raison)");
-    $message->set("--filetype=csv : extension des fichiers à traiter");
-    $message->set("--noMove=1 : pas de déplacement des fichiers une fois traités");
-    $message->set("Les fichiers à traiter doivent être déposés dans le dossier import");
-    $message->set("Une fois traités, les fichiers sont déplacés dans le dossier treated");
+    $message->set("Options:");
+    $message->set("-h or --help: this help message");
+    $message->set("All parameters in the section [general] of the file param.ini can be used");
+    $message->set("in the command line, as --param=value");
+    $message->set("--basedir= : default folder of the application");
+    $message->set("--source=import : folder where the zip files are downloaded");
+    $message->set("--dest=treated : folder where the treated files are moved");
+    $message->set("--temp=temp : temp folder, used to open zip files");
+    $message->set("--zipextension=zip : extension of zip files");
+    $message->set("--csvextension=csv : extension of csv files");
+    $message->set("--param=param.ini : name of the parameter file");
+    $message->set("--nomove=0 : if 1, the files aren't moved after treatment");
+    $message->set("--separator=comma : field separator used in the csv files");
+    $message->set("--exportjson=1 : save the content of data in a json file");
+    $message->set("--export=export : folder where the json files are recorded");
+    $message->set("--displayfirstline=0 : if 1, display the first record");
+    $message->set("--tempfolderpurge=1 : purge the temp folder of csv files");
+    $message->set("--writedataindb=1 : call a subprogram to write data into the database");
+    $message->set("--separator=comma : field separator used in the csv files");
+    $message->set("--dbmodel= : name of the section of the param.ini file witch contains the description of the database recording");
+    $message->set("--debug=0 : if 1, active the debug mode");
+   $message->set("");
+   $message->set("Content of the dbmodel section:");
+   $message->set("dsn: connection chain to the database (PDO syntax)");
+   $message->set("login: used login to connect the database");
+   $message->set("password: associated password");
+   $message->set("classpath: name of the file whitch contains the class used to write into the database");
+   $message->set("className: name of the class used to write into the database. The class must implements the interface Database");
+
     $eot = true;
 } else {
     /**
