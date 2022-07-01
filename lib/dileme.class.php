@@ -9,9 +9,12 @@ class Dileme extends Db implements Database
   {
     $this->connection = $connection;
   }
+  function setDebug(bool $modeDebug = false)
+  {
+    $this->modeDebug = $modeDebug;
+  }
   function setData(array $data)
   {
-    $this->modeDebug = true;
     foreach ($data["saisie_labo_1"] as $sampling) {
       $dsampling = array(
         "sampling_id" => 0,
@@ -55,7 +58,7 @@ class Dileme extends Db implements Database
         "fishing_id" => 0,
         "fishing_number" => 1,
         "sampling_id" => $dsampling["sampling_id"],
-        "fishing_date" => $sampling["sampling_fishing_date"],
+        "fishing_date" => $sampling["sampling-fishing_date"],
         "engine_position_id" => $sampling["sampling-engine_position_id"],
         "engine_id" => 1,
         "sort_date" => $sampling["sampling-sort_date"]

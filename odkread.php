@@ -76,19 +76,6 @@ if (!$eot) {
             $param["general"][substr($key, 2)] = $value;
         }
     }
-
-    /**
-     * Connexion à la base de données
-     */
-    /*    try {
-        $pdo = connect($param["general"]["dsn"], $param["general"]["user"], $param["general"]["password"], $param["general"]["schema"]);
-        $station = new Station($pdo);
-        $coef = new Coef($pdo);
-    } catch (Exception $e) {
-        $message->set("Erreur de connexion à la base de données :");
-        $message->set($e->getMessage());
-        $eot = true;
-    }*/
 }
 if (!$eot) {
 
@@ -96,7 +83,7 @@ if (!$eot) {
         /**
          * Get the list of files to treat
          */
-        $odk = new Odk($param);
+        $odk = new Odk($param["general"]);
         $csv = new Csv();
         $zip = new ZipArchive();
         $sourcefolder = $odk->sanitizePath($param["general"]["source"]);
@@ -130,6 +117,7 @@ if (!$eot) {
 
             $odk->generateStructuredData();
             if ($param["general"]["exportjson"] == 1) {
+                $exportfolder = $odk->sanitizePath($param["general"]["export"]);
                 $jsonfilename = "odkread-" . date("YmdHis") . ".js";
                 $jsonfile = fopen($jsonfilename, 'w');
                 fwrite($jsonfile, json_encode($odk->structuredData));
@@ -147,13 +135,14 @@ if (!$eot) {
                 }
             }
             if ($param["general"]["writedataindb"] == 1) {
+                $dbmodel = $param["general"]["dbmodel"];
                 $pdo = new PDO(
-                    $param["database"]["dsn"],
-                    $param["database"]["login"],
-                    $param["database"]["password"]
+                    $param[$dbmodel]["dsn"],
+                    $param[$dbmodel]["login"],
+                    $param[$dbmodel]["password"]
                 );
                 $pdo->beginTransaction();
-                $nbTreated = $odk->writeDataDB($param["database"]["classpath"], $param["database"]["className"], $pdo);
+                $nbTreated = $odk->writeDataDB($param[$dbmodel]["classpath"], $param[$dbmodel]["className"], $pdo);
                 $message->set("Number of forms treated: $nbTreated");
                 $pdo->commit();
             }
