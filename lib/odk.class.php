@@ -9,6 +9,7 @@ interface Database
   function setData(array $data);
   function getTreatedNumber(): int;
   function setDebug(bool $modeDebug = false);
+  function getMessage(): array;
 }
 
 class Odk
@@ -20,6 +21,7 @@ class Odk
   public array $dataIndex = array();
   private $tempPath, $source, $dest;
   private $dc; # Database class
+  public array $message = array();
 
   /**
    * Constructor
@@ -42,7 +44,7 @@ class Odk
    * @param boolean $withCreation
    * @return boolean
    */
-  function verifyFolder(string $path, bool $withCreation = false):bool
+  function verifyFolder(string $path, bool $withCreation = false): bool
   {
     $ok = true;
     if (!file_exists($path)) {
@@ -59,7 +61,7 @@ class Odk
 
   function sanitizePath($p)
   {
-    return ($this->param["basedir"]. "/". str_replace("../", "", $p));
+    return ($this->param["basedir"] . "/" . str_replace("../", "", $p));
   }
 
   /**
@@ -169,7 +171,7 @@ class Odk
         /**
          * Search if exists a child from the index array
          */
-        if (count($this->dataIndex[$key]) > 0) {
+        if ($this->dataIndex[$key]!= null && count($this->dataIndex[$key]) > 0) {
           $this->structuredData[$name][$key]["CHILDREN"] = $this->getChildren($key);
         }
       }
@@ -187,8 +189,10 @@ class Odk
       $childKey = $v["KEY"];
       $name = $this->raw[$filename]["name"];
       $dataChild = $this->raw[$filename]["data"][$childKey];
-      if (count($this->dataIndex[$childKey]) > 0) {
-        $dataChild["CHILDREN"] = $this->getChildren($childKey);
+      if ($this->dataIndex[$childKey] != null) {
+        if (count($this->dataIndex[$childKey]) > 0) {
+          $dataChild["CHILDREN"] = $this->getChildren($childKey);
+        }
       }
       $children[$name][] = $dataChild;
     }
@@ -219,6 +223,7 @@ class Odk
     $this->dc->setDebug($this->param["debug"]);
     $this->dc->setConnection($connection);
     $this->dc->setData($this->structuredData);
+    $this->message = $this->dc->getMessage();
     return $this->dc->getTreatedNumber();
   }
 }

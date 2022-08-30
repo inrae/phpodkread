@@ -45,7 +45,7 @@ class Db
      * update
      */
     if ($mode == "update") {
-      $sql = "update $this->quote$table$this->quote set ";
+      $sql = "update $this->quote$schemaName$this->quote.$this->quote$tableName$this->quote set ";
       foreach ($data as $field => $value) {
         /**
          * Verifiy if the column exists in the table
@@ -164,7 +164,7 @@ class Db
    */
   function getStructure(string $schemaName, string $tableName)
   {
-    if (count($this->structure[$schemaName][$tableName]) == 0) {
+    if ($this->structure[$schemaName][$tableName]== null || count($this->structure[$schemaName][$tableName]) == 0) {
       $sql = 'SELECT pg_attribute.attname AS field,
             pg_catalog.format_type(pg_attribute.atttypid,pg_attribute.atttypmod) AS "type",
           (SELECT col_description(pg_attribute.attrelid,pg_attribute.attnum)) AS comment,
