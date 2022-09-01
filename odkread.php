@@ -2,12 +2,13 @@
 
 /**
  * Created by Eric Quinton - June 2022
+ * Version 1.1 - September 1st, 2022
  * Copyright © INRAE
  * MIT License
  */
 
 error_reporting(E_ERROR);
-require_once 'lib/message.php';
+require_once 'lib/message.class.php';
 require_once 'lib/functions.php';
 require_once 'lib/csv.class.php';
 require_once 'lib/odk.class.php';
@@ -48,13 +49,13 @@ if ($argv[1] == "-h" || $argv[1] == "--help") {
     $message->set("--separator=comma : field separator used in the csv files");
     $message->set("--dbmodel= : name of the section of the param.ini file witch contains the description of the database recording");
     $message->set("--debug=0 : if 1, active the debug mode");
-   $message->set("");
-   $message->set("Content of the dbmodel section:");
-   $message->set("dsn: connection chain to the database (PDO syntax)");
-   $message->set("login: used login to connect the database");
-   $message->set("password: associated password");
-   $message->set("classpath: name of the file whitch contains the class used to write into the database");
-   $message->set("className: name of the class used to write into the database. The class must implements the interface Database");
+    $message->set("");
+    $message->set("Content of the dbmodel section:");
+    $message->set("dsn: connection chain to the database (PDO syntax)");
+    $message->set("login: used login to connect the database");
+    $message->set("password: associated password");
+    $message->set("classpath: name of the file whitch contains the class used to write into the database");
+    $message->set("className: name of the class used to write into the database. The class must implements the interface Database");
 
     $eot = true;
 } else {
@@ -177,7 +178,7 @@ if (!$eot) {
             }
             $message->set("File $file treated");
         }
-     } catch (Exception $e) {
+    } catch (Exception $e) {
         $message->set("Error encountered");
         $message->set($e->getMessage());
         if (isset($pdo)) {

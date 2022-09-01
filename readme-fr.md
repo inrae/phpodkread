@@ -19,7 +19,7 @@ Vous devez avoir installé php7.4 ou ultérieur dans votre ordinateur, avec au m
 
 - php7.4-cli
 - php7.4-json
-- php7.4-pgsql ou php7.4-mysql selon la base de données concernée
+- php7.4-pgsql (non testé avec MySql)
 - php7.4-readline
 - php7.4-zip
 
@@ -79,10 +79,16 @@ class Myclass extends Db implements Database
   {
     [...]
   }
+  function getMessage() :array
+  {
+    return $this->message;
+  }
 }
 ~~~
 
 C'est dans la fonction *setData* que les opérations d'écriture en base de données doivent être déclenchées.
+
+Le tableau *$this->message* contient l'ensemble des messages qui seront affichés après traitement. Il peut être utilisé pour indiquer les erreurs rencontrées pendant le traitement.
 
 ### Paramétrage
 

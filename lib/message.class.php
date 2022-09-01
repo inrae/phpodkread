@@ -1,11 +1,13 @@
 <?php
 
-
+/**
+ * Store all messages in a array
+ */
 class Message
 {
 
     /**
-     * Tableau contenant l'ensemble des messages generes
+     * All messages
      *
      * @var array
      */
@@ -22,23 +24,36 @@ class Message
         $this->_displaySyslog = $displaySyslog;
     }
 
-    function set($value, $is_error = false)
+    /**
+     * Add a message
+     *
+     * @param string $value
+     * @param boolean $is_error
+     * @return void
+     */
+    function set(string $value, $is_error = false)
     {
         $this->_message[] = $value;
         if ($is_error) {
             $this->is_error = true;
         }
     }
-
-    function setSyslog($value)
+    /**
+     * Add a technical message
+     * Perhaps used to fill into syslog messages
+     *
+     * @param string $value
+     * @return void
+     */
+    function setSyslog(string $value)
     {
         $this->_syslog[] = $value;
     }
 
     /**
-     * Retourne le tableau brut
+     * get all messages
      */
-    function get()
+    function get(): array
     {
         if ($this->_displaySyslog) {
             return array_merge($this->_message, $this->_syslog);
@@ -48,8 +63,7 @@ class Message
     }
 
     /**
-     * Retourne le tableau formate avec saut de ligne entre
-     * chaque message
+     * Get all messages formated to html display
      *
      * @return string
      */
@@ -72,4 +86,3 @@ class Message
         return $data;
     }
 }
-?>

@@ -13,6 +13,7 @@ class Db
   public bool $modeDebug = false;
   public $quote = '"';
   public array $structure = array();
+  public array $message = array();
 
   function writeData(string $schemaName, string $tableName, array $data, string $keyName): ?int
   {

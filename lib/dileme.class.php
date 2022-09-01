@@ -4,7 +4,6 @@ class Dileme extends Db implements Database
 {
 
   private int $treatedNb = 0;
-  public $message = array();
 
   function setConnection(PDO $connection)
   {
@@ -64,17 +63,6 @@ class Dileme extends Db implements Database
           $dsample["sample_id"] = $res[0]["sample_id"];
         } else {
           $dsample["sample_id"] = $this->writeData("dileme", "sample", $dsample, "sample_id");
-          /**
-           * Remove pre-existent records in sample_taxon and individuals
-           */
-          $sql = "delete from dileme.individual i
-              using dileme.sample_taxon st
-              where i.sample_taxon_id = st.sample_taxon_id
-              and st.sample_id = :sample_id";
-          $sqlData = array("sample_id" => $dsample["sample_id"]);
-          $this->execute($sql, $sqlData);
-          $sql = "delete from dileme.sample_taxon where sample_id = :sample_id";
-          $this->execute($sql, $sqlData);
           /**
            * Treatment of each sample_taxon
            */

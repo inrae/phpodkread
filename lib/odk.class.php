@@ -2,7 +2,9 @@
 class OdkException extends Exception
 {
 }
-
+/**
+ * Interface of the classes used to record data into databases
+ */
 interface Database
 {
   function setConnection(PDO $connection);
@@ -12,6 +14,9 @@ interface Database
   function getMessage(): array;
 }
 
+/**
+ * Main class
+ */
 class Odk
 {
   public array $raw;
@@ -19,7 +24,7 @@ class Odk
   public array $structuredData;
   public array $mainfile = array();
   public array $dataIndex = array();
-  private $tempPath, $source, $dest;
+  private $tempPath, $media;
   private $dc; # Database class
   public array $message = array();
 
@@ -33,6 +38,7 @@ class Odk
     $this->param = $param;
     $this->param["basedir"] = str_replace("..", "", $this->param["basedir"]);
     $this->tempPath = $this->sanitizePath($this->param["temp"]);
+    $this->media = $this->sanitizePath($this->param["temp"] . "/" . $this->param["media"]);
     if (!$this->verifyFolder($this->tempPath, true)) {
       throw new OdkException("Unable to create the temp folder");
     }
@@ -59,7 +65,13 @@ class Odk
     return $ok;
   }
 
-  function sanitizePath($p)
+  /**
+   * Sanitize the furnished path
+   *
+   * @param string $p
+   * @return string
+   */
+  function sanitizePath(string $p): string
   {
     return ($this->param["basedir"] . "/" . str_replace("../", "", $p));
   }
@@ -116,9 +128,29 @@ class Odk
         }
       }
       closedir($folder);
+      /**
+       * Treatment of the media folder
+       */
+      $message [] = $this->media;
+      if (is_dir($this->media)) {
+        $mediaDir = opendir($this->media);
+        while (false !== ($filename = readdir($mediaDir))) {
+          if (is_file($this->media . "/" . $filename)) {
+            unlink($this->media . "/" . $filename);
+          }
+        }
+        closedir($this->mediaDir);
+        rmdir($this->media);
+      }
     }
   }
 
+  /**
+   * Move the file (after treatment)
+   *
+   * @param [type] $filename
+   * @return void
+   */
   function moveFile($filename)
   {
     $from = $this->sanitizePath($this->param["source"]);
@@ -126,6 +158,13 @@ class Odk
     rename($from . "/" . $filename, $to . "/" . $filename);
   }
 
+  /**
+   * extract the data from a csv file
+   *
+   * @param string $csvfile
+   * @param array $data
+   * @return void
+   */
   function readCsvContent(string $csvfile, array $data)
   {
     $this->raw[$csvfile]["data"] = $data;
@@ -154,6 +193,11 @@ class Odk
     }
   }
 
+  /**
+   * Generate the array which contains all data
+   *
+   * @return void
+   */
   function generateStructuredData()
   {
     $this->structuredData = array();
@@ -171,7 +215,7 @@ class Odk
         /**
          * Search if exists a child from the index array
          */
-        if ($this->dataIndex[$key]!= null && count($this->dataIndex[$key]) > 0) {
+        if ($this->dataIndex[$key] != null && count($this->dataIndex[$key]) > 0) {
           $this->structuredData[$name][$key]["CHILDREN"] = $this->getChildren($key);
         }
       }

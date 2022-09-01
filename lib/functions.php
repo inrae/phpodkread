@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Fonction permettant de reorganiser les donnees des fichiers telecharges,
- * pour une utilisation directe en tableau
+ * Function to reorganize data from downloaded files,
+ * for direct use in array
  * @return multitype:multitype:NULL  unknown
  */
 function formatFiles($attributName = "documentName")
@@ -23,7 +23,27 @@ function formatFiles($attributName = "documentName")
     } else $files[] = $fdata;
     return $files;
 }
+/**
+ * Generate a line return with <br> or PHP_EOL
+ *
+ * @return void
+ */
+function phpeol()
+{
+    if (PHP_SAPI == "cli") {
+        return PHP_EOL;
+    } else {
+        return "<br>";
+    }
+}
 
+/**
+ * display the term "test" with a number and a content, if required
+ * Debug function
+ *
+ * @param string $content
+ * @return void
+ */
 function test($content = "")
 {
     global $testOccurrence;
@@ -32,6 +52,7 @@ function test($content = "")
 }
 /**
  * Display the content of a variable
+ * Debug function
  *
  * @param any $tableau
  * @param integer $mode_dump
@@ -51,17 +72,4 @@ function printr($tableau, $mode_dump = false)
         }
     }
     echo phpeol();
-}
-/**
- * Generate a line return with <br> or PHP_EOL
- *
- * @return void
- */
-function phpeol()
-{
-    if (PHP_SAPI == "cli") {
-        return PHP_EOL;
-    } else {
-        return "<br>";
-    }
 }

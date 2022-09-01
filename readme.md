@@ -19,7 +19,7 @@ You must have php7.4 or later installed on your computer, with at least the foll
 
 - php7.4-cli
 - php7.4-json
-- php7.4-pgsql or php7.4-mysql depending on the database concerned
+- php7.4-pgsql (not tested with mysql)
 - php7.4-readline
 - php7.4-zip
 
@@ -79,10 +79,16 @@ class Myclass extends Db implements Database
   {
     [...]
   }
+  function getMessage() :array
+  {
+    return $this->message;
+  }
 }
 ~~~
 
 It is in the *setData* function that the database writing operations must be triggered.
+
+The *$this->message* array contains all the messages that will be displayed after processing. It can be used to indicate errors encountered during processing.
 
 ### Parameterization
 
