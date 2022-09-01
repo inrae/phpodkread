@@ -62,36 +62,37 @@ class Dileme extends Db implements Database
 
         if ($res[0]["sample_id"] > 0) {
           $dsample["sample_id"] = $res[0]["sample_id"];
-        }
-        $dsample["sample_id"] = $this->writeData("dileme", "sample", $dsample, "sample_id");
-        /**
-         * Remove pre-existent records in sample_taxon and individuals
-         */
-        $sql = "delete from dileme.individual i
+        } else {
+          $dsample["sample_id"] = $this->writeData("dileme", "sample", $dsample, "sample_id");
+          /**
+           * Remove pre-existent records in sample_taxon and individuals
+           */
+          $sql = "delete from dileme.individual i
               using dileme.sample_taxon st
               where i.sample_taxon_id = st.sample_taxon_id
               and st.sample_id = :sample_id";
-        $sqlData = array("sample_id" => $dsample["sample_id"]);
-        $this->execute($sql, $sqlData);
-        $sql = "delete from dileme.sample_taxon where sample_id = :sample_id";
-        $this->execute($sql, $sqlData);
-        /**
-         * Treatment of each sample_taxon
-         */
-        foreach ($sampling["CHILDREN"]["sample_taxon"] as $dst) {
-          $dst["sample_id"] = $dsample["sample_id"];
-          $dst["sample_taxon_id"] = 0;
-          if (empty($dst["development_stage_id"])) {
-            unset($dst["development_stage_id"]);
-          }
-          $dst["sample_taxon_id"] = $this->writeData("dileme", "sample_taxon", $dst, "sample_taxon_id");
+          $sqlData = array("sample_id" => $dsample["sample_id"]);
+          $this->execute($sql, $sqlData);
+          $sql = "delete from dileme.sample_taxon where sample_id = :sample_id";
+          $this->execute($sql, $sqlData);
           /**
-           * Treatment of each individual
+           * Treatment of each sample_taxon
            */
-          foreach ($dst["CHILDREN"]["individual"] as $di) {
-            $di["sample_taxon_id"] = $dst["sample_taxon_id"];
-            $di["individual_id"] = 0;
-            $this->writeData("dileme", "individual", $di, "individual_id");
+          foreach ($sampling["CHILDREN"]["sample_taxon"] as $dst) {
+            $dst["sample_id"] = $dsample["sample_id"];
+            $dst["sample_taxon_id"] = 0;
+            if (empty($dst["development_stage_id"])) {
+              unset($dst["development_stage_id"]);
+            }
+            $dst["sample_taxon_id"] = $this->writeData("dileme", "sample_taxon", $dst, "sample_taxon_id");
+            /**
+             * Treatment of each individual
+             */
+            foreach ($dst["CHILDREN"]["individual"] as $di) {
+              $di["sample_taxon_id"] = $dst["sample_taxon_id"];
+              $di["individual_id"] = 0;
+              $this->writeData("dileme", "individual", $di, "individual_id");
+            }
           }
         }
       } else {
@@ -99,7 +100,9 @@ class Dileme extends Db implements Database
           ":  fishing not found. Site_id: " . $sampling["sampling-site_id"] .
           ", fishing_date: " . $sampling["sampling-fishing_date"] .
           ", fishing_number: " . $sampling["sampling-sample_number"] .
-          ", engine_position_id: " . $sampling["sampling-engine_position_id"];
+          ", engine_position_id: " . $sampling["sampling-engine_position_id"] .
+          ", campaign_number: " . $sampling["sampling-campaign_number"] .
+          ", sampling-sort_date: " . $sampling["sampling-sort_date"];
       }
       $this->treatedNb++;
     }
