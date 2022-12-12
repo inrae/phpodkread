@@ -173,7 +173,7 @@ if (!$eot) {
             if ($param["general"]["tempfolderpurge"] == 1) {
                 $odk->tempPurge();
             }
-            if ($param["general"]["noMove"] != 1) {
+            if ($param["general"]["nomove"] != 1) {
                 $odk->moveFile($file);
             }
             $message->set("File $file treated");

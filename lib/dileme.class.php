@@ -39,7 +39,9 @@ class Dileme extends Db implements Database
       );
       if ($res[0]["fishing_id"] > 0) {
         $fishing_id = $res[0]["fishing_id"];
-
+        if ($this->modeDebug) {
+          $this->message["Fishing_id:" . $fishing_id];
+        }
         /**
          * Search for sample
          */
@@ -63,24 +65,35 @@ class Dileme extends Db implements Database
           $dsample["sample_id"] = $res[0]["sample_id"];
         } else {
           $dsample["sample_id"] = $this->writeData("dileme", "sample", $dsample, "sample_id");
+        }
+        /**
+         * Treatment of each sample_taxon
+         */
+        /**
+         * Delete all precedent records
+         */
+        $sql = "delete from dileme.individual i
+                  using dileme.sample_taxon st
+                  where st.sample_taxon_id = i.sample_taxon_id
+                  and st.sample_id = :sample_id";
+        $this->execute($sql, array("sample_id" => $dsample["sample_id"]));
+        $sql = "delete from dileme.sample_taxon
+                  where sample_id = :sample_id";
+        $this->execute($sql, array("sample_id" => $dsample["sample_id"]));
+        foreach ($sampling["CHILDREN"]["sample_taxon"] as $dst) {
+          $dst["sample_id"] = $dsample["sample_id"];
+          $dst["sample_taxon_id"] = 0;
+          if (empty($dst["development_stage_id"])) {
+            unset($dst["development_stage_id"]);
+          }
+          $dst["sample_taxon_id"] = $this->writeData("dileme", "sample_taxon", $dst, "sample_taxon_id");
           /**
-           * Treatment of each sample_taxon
+           * Treatment of each individual
            */
-          foreach ($sampling["CHILDREN"]["sample_taxon"] as $dst) {
-            $dst["sample_id"] = $dsample["sample_id"];
-            $dst["sample_taxon_id"] = 0;
-            if (empty($dst["development_stage_id"])) {
-              unset($dst["development_stage_id"]);
-            }
-            $dst["sample_taxon_id"] = $this->writeData("dileme", "sample_taxon", $dst, "sample_taxon_id");
-            /**
-             * Treatment of each individual
-             */
-            foreach ($dst["CHILDREN"]["individual"] as $di) {
-              $di["sample_taxon_id"] = $dst["sample_taxon_id"];
-              $di["individual_id"] = 0;
-              $this->writeData("dileme", "individual", $di, "individual_id");
-            }
+          foreach ($dst["CHILDREN"]["individual"] as $di) {
+            $di["sample_taxon_id"] = $dst["sample_taxon_id"];
+            $di["individual_id"] = 0;
+            $this->writeData("dileme", "individual", $di, "individual_id");
           }
         }
       } else {
