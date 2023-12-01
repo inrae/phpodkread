@@ -2,7 +2,7 @@
 
 /**
  * Created by Eric Quinton - June 2022
- * Version 1.3 - 01/12/2023
+ * Version 1.4 - 01/12/2023
  * Copyright © INRAE
  * MIT License
  */
