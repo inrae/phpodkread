@@ -9,9 +9,11 @@ interface Database
 {
   function setConnection(PDO $connection);
   function setData(array $data);
+  function setFormName(string $formname);
   function getTreatedNumber(): int;
   function setDebug(bool $modeDebug = false);
   function getMessage(): array;
+  function setOptionalParameters(array $data);
 }
 
 /**
@@ -27,15 +29,17 @@ class Odk
   private $tempPath, $media;
   private $dc; # Database class
   public array $message = array();
+  public array $optionalParameters;
 
   /**
    * Constructor
    *
    * @param array $param: content of param.ini
    */
-  function __construct(array $param)
+  function __construct(array $param, array $optionalParameters = array())
   {
     $this->param = $param;
+    $this->optionalParameters = $optionalParameters;
     $this->param["basedir"] = str_replace("..", "", $this->param["basedir"]);
     $this->tempPath = $this->sanitizePath($this->param["temp"]);
     $this->media = $this->sanitizePath($this->param["temp"] . "/" . $this->param["media"]);
@@ -131,7 +135,7 @@ class Odk
       /**
        * Treatment of the media folder
        */
-      $message [] = $this->media;
+      $this->message [] = $this->media;
       if (is_dir($this->media)) {
         $mediaDir = opendir($this->media);
         while (false !== ($filename = readdir($mediaDir))) {
@@ -139,7 +143,7 @@ class Odk
             unlink($this->media . "/" . $filename);
           }
         }
-        closedir($this->mediaDir);
+        closedir($mediaDir);
         rmdir($this->media);
       }
     }
@@ -264,8 +268,10 @@ class Odk
     if (!$ok) {
       throw new OdkException("The class $className not implements Database");
     }
+    $this->dc->setOptionalParameters($this->optionalParameters);
     $this->dc->setDebug($this->param["debug"]);
     $this->dc->setConnection($connection);
+    $this->dc->setFormName($this->param["formname"]);
     $this->dc->setData($this->structuredData);
     $this->message = $this->dc->getMessage();
     return $this->dc->getTreatedNumber();

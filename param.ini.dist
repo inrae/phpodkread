@@ -13,12 +13,18 @@ displayfirstline=0
 tempfolderpurge=1
 writedataindb=1
 dbmodel=dileme
+optionalParameters=dilemeparam
 debug=0
 media=media
+formname=
+secretKey="/home/equinton/.ssh/secret.key"
 
 [dileme]
 dsn="pgsql:host=localhost;dbname=dileme"
 login=dileme
-password=dilemePassword
+password="cryptedPasswdWithPwencrypt.php=="
 classpath=lib/dileme.class.php
 className=Dileme
+
+[dilemeparam]
+campaignNumber=4

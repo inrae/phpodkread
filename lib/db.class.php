@@ -14,6 +14,7 @@ class Db
   public $quote = '"';
   public array $structure = array();
   public array $message = array();
+  public array $optionalParameters = array();
 
   function writeData(string $schemaName, string $tableName, array $data, string $keyName): ?int
   {

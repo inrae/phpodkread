@@ -25,20 +25,21 @@ You must have php7.4 or later installed on your computer, with at least the foll
 
 ### Usage
 
-Rename the *param.inc.dist* file to *param.inc.php*, then modify in particular:
+Rename the _param.inc.dist_ file to _param.inc.php_, then modify in particular:
 
 - basedir : the folder where the software is installed
 - displayfirstline=1 : for tests, this allows you to see the data as they are organized once the treatment is done
 - noMove=1 : removes the movement of the processed files (to be restored in production)
 - writedataindb=0 : to be activated once you have written the appropriate class to feed your database
+- formname= : indicate the name of the form of odk. It is necessary to import data into database
 
-Put the file to be processed (several files can also be processed at once) in the *import* folder.
+Put the file to be processed (several files can also be processed at once) in the _import_ folder.
 
 Then run the program :
 
-~~~
+```
 php odkread.php
-~~~
+```
 
 ## Writing data to the database
 
@@ -46,22 +47,24 @@ php odkread.php
 
 You must write a class adapted to your needs, to manage correctly the writing of information in the database.
 
-Before writing the class, it is strongly advised to display the structure of the table containing the data, by executing the program with the option *--displayfirstline=1*, to visualize the way the information is organized.
+Before writing the class, it is strongly advised to display the structure of the table containing the data, by executing the program with the option _\--displayfirstline=1_, to visualize the way the information is organized.
 
 ### Content of the class
 
 The class must be declared as follows:
 
-~~~
+```
 class Myclass [extends XXX] implements Database
-~~~
+```
 
-Here is the beginning of the example class that is provided (file *lib/dileme.class.php*):
-~~~
+Here is the beginning of the example class that is provided (file _lib/dileme.class.php_):
+
+```
 class Myclass extends Db implements Database
 {
 
   private int $treatedNb = 0;
+  private string $formname;
 
   function setConnection(PDO $connection)
   {
@@ -75,6 +78,9 @@ class Myclass extends Db implements Database
   {
     return $this->treatedNb;
   }
+  function setFormName (string $formname) {
+    $this->formname = $formname;
+  }
   function setData(array $data)
   {
     [...]
@@ -83,18 +89,22 @@ class Myclass extends Db implements Database
   {
     return $this->message;
   }
+  function setOptionalParameters($op)
+  {
+    $this->optionalParameters = $op;
+  }
 }
-~~~
+```
 
-It is in the *setData* function that the database writing operations must be triggered.
+It is in the _setData_ function that the database writing operations must be triggered.
 
-The *$this->message* array contains all the messages that will be displayed after processing. It can be used to indicate errors encountered during processing.
+The _$this->message_ array contains all the messages that will be displayed after processing. It can be used to indicate errors encountered during processing.
 
 ### Parameterization
 
-To call the class, edit the *param.ini* file, then :
+To call the class, edit the _param.ini_ file, then :
 
-- create a section corresponding to your database, for example [dileme]
+- create a section corresponding to your database, for example \[dileme\]
 - fill in the following information:
   - dsn : uri of connection to the database, according to the nomenclature used by PHP
   - login : login to use
@@ -106,6 +116,6 @@ To call the class, edit the *param.ini* file, then :
 
 The application is published under MIT license.
 
-Copyright © INRAE, 2022
+Copyright © INRAE, 2022-2023
 
 Translated with www.DeepL.com/Translator (free version)

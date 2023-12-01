@@ -32,13 +32,13 @@ Renommez le fichier param.inc.dist en param.inc.php, puis modifiez notamment :
 - noMove=1 : supprime le déplacement des fichiers traités (à rétablir en production)
 - writedataindb=0 : à activer une fois que vous aurez écrit la classe adéquate pour alimenter votre base de données
 
-Déposez le fichier à traiter (plusieurs fichiers peuvent également être traités en une seule fois) dans le dossier *import*.
+Déposez le fichier à traiter (plusieurs fichiers peuvent également être traités en une seule fois) dans le dossier _import_.
 
 Lancez ensuite le programme :
 
-~~~
+```
 php odkread.php
-~~~
+```
 
 ## Écriture des données en base de données
 
@@ -46,18 +46,19 @@ php odkread.php
 
 Vous devez écrire une classe adaptée à votre besoin, pour gérer correctement l'écriture des informations dans la base de données.
 
-Avant d'écrire la classe, il est fortement conseillé d'afficher la structure du tableau contenant les données, en exécutant le programme avec l'option *--displayfirstline=1*, pour bien visualiser la manière dont les informations sont organisées.
+Avant d'écrire la classe, il est fortement conseillé d'afficher la structure du tableau contenant les données, en exécutant le programme avec l'option _\--displayfirstline=1_, pour bien visualiser la manière dont les informations sont organisées.
 
 ### Contenu de la classe
 
 La classe doit être déclarée ainsi :
 
-~~~
+```
 class Myclass [extends XXX] implements Database
-~~~
+```
 
-Voici le début de la classe d'exemple qui est fournie (fichier *lib/dileme.class.php*) :
-~~~
+Voici le début de la classe d'exemple qui est fournie (fichier _lib/dileme.class.php_) :
+
+```
 class Myclass extends Db implements Database
 {
 
@@ -83,18 +84,22 @@ class Myclass extends Db implements Database
   {
     return $this->message;
   }
+  function setOptionalParameters($op)
+  {
+    $this->optionalParameters = $op;
+  }
 }
-~~~
+```
 
-C'est dans la fonction *setData* que les opérations d'écriture en base de données doivent être déclenchées.
+C'est dans la fonction _setData_ que les opérations d'écriture en base de données doivent être déclenchées.
 
-Le tableau *$this->message* contient l'ensemble des messages qui seront affichés après traitement. Il peut être utilisé pour indiquer les erreurs rencontrées pendant le traitement.
+Le tableau _$this->message_ contient l'ensemble des messages qui seront affichés après traitement. Il peut être utilisé pour indiquer les erreurs rencontrées pendant le traitement.
 
 ### Paramétrage
 
-Pour appeler la classe, éditez le fichier *param.ini*, puis :
+Pour appeler la classe, éditez le fichier _param.ini_, puis :
 
-- créez une section correspondant à votre base de données, par exemple [dileme]
+- créez une section correspondant à votre base de données, par exemple \[dileme\]
 - renseignez les informations suivantes :
   - dsn : uri de connexion à la base de données, selon la nomenclature utilisée par PHP
   - login : login de connexion à utiliser

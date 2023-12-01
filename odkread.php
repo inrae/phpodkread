@@ -2,7 +2,7 @@
 
 /**
  * Created by Eric Quinton - June 2022
- * Version 1.1 - September 1st, 2022
+ * Version 1.3 - 01/12/2023
  * Copyright © INRAE
  * MIT License
  */
@@ -22,7 +22,7 @@ $eot = false;
  * Default options
  */
 $message->set("PHPODKread: read the contents of the files downloaded from the ODK-Collect server");
-$message->set("Licence : MIT. Copyright © 2022 - Éric Quinton, INRAE - EABX - FR33 Cestas");
+$message->set("Licence : MIT. Copyright © 2022-2023 - Éric Quinton, INRAE - EABX - FR33 Cestas");
 /**
  * Traitement des options de la ligne de commande
  */
@@ -47,13 +47,16 @@ if ($argv[1] == "-h" || $argv[1] == "--help") {
     $message->set("--tempfolderpurge=1 : purge the temp folder of csv files");
     $message->set("--writedataindb=1 : call a subprogram to write data into the database");
     $message->set("--separator=comma : field separator used in the csv files");
+    $message->set("--formname= : name of the form, furnished by odk");
     $message->set("--dbmodel= : name of the section of the param.ini file witch contains the description of the database recording");
+    $message->set("--optionalParameters= : name of the section of the param.ini file witch contains the optional parameters transfered to the database class");
     $message->set("--debug=0 : if 1, active the debug mode");
+    $message->set("--secretKey= : name of the file witch contains the secret key used to crypt the password of the login used to connect the database");
     $message->set("");
     $message->set("Content of the dbmodel section:");
     $message->set("dsn: connection chain to the database (PDO syntax)");
     $message->set("login: used login to connect the database");
-    $message->set("password: associated password");
+    $message->set("password: associated password, crypted with pwencrypt.php");
     $message->set("classpath: name of the file whitch contains the class used to write into the database");
     $message->set("className: name of the class used to write into the database. The class must implements the interface Database");
 
@@ -93,7 +96,8 @@ if (!$eot) {
         /**
          * Get the list of files to treat
          */
-        $odk = new Odk($param["general"]);
+        is_array($param[$param["optionalParameters"]]) ? $optionalparameters = $param[$param["optionalParameters"]] : $optionalparameters = array();
+        $odk = new Odk($param["general"], $optionalparameters);
         $csv = new Csv();
         $zip = new ZipArchive();
         $sourcefolder = $odk->sanitizePath($param["general"]["source"]);
@@ -131,7 +135,7 @@ if (!$eot) {
                     throw new OdkException("Unable to open or create the export folder");
                 }
                 $jsonfilename = "odkread-" . date("YmdHis") . ".js";
-                $jsonfile = fopen($exportfolder."/".$jsonfilename, 'w');
+                $jsonfile = fopen($exportfolder . "/" . $jsonfilename, 'w');
                 fwrite($jsonfile, json_encode($odk->structuredData));
                 fclose($jsonfile);
                 $message->set("File $jsonfilename generated");
@@ -148,10 +152,11 @@ if (!$eot) {
             }
             if ($param["general"]["writedataindb"] == 1) {
                 $dbmodel = $param["general"]["dbmodel"];
+                $secretKey = file($param["general"]["secretKey"], FILE_IGNORE_NEW_LINES);
                 $pdo = new PDO(
                     $param[$dbmodel]["dsn"],
                     $param[$dbmodel]["login"],
-                    $param[$dbmodel]["password"]
+                    openssl_decrypt($param[$dbmodel]["password"], "aes-256-cbc", $secretKey[0])
                 );
                 $pdo->beginTransaction();
                 $nbTreated = $odk->writeDataDB($param[$dbmodel]["classpath"], $param[$dbmodel]["className"], $pdo);
