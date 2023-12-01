@@ -96,7 +96,7 @@ if (!$eot) {
         /**
          * Get the list of files to treat
          */
-        is_array($param[$param["optionalParameters"]]) ? $optionalparameters = $param[$param["optionalParameters"]] : $optionalparameters = array();
+        is_array($param[$param["general"]["optionalParameters"]]) ? $optionalparameters = $param[$param["general"]["optionalParameters"]] : $optionalparameters = array();
         $odk = new Odk($param["general"], $optionalparameters);
         $csv = new Csv();
         $zip = new ZipArchive();

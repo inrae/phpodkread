@@ -271,7 +271,7 @@ class Odk
     $this->dc->setOptionalParameters($this->optionalParameters);
     $this->dc->setDebug($this->param["debug"]);
     $this->dc->setConnection($connection);
-    $this->dc->setFormName($this->param["formname"]);
+    $this->dc->setFormName($this->param["formName"]);
     $this->dc->setData($this->structuredData);
     $this->message = $this->dc->getMessage();
     return $this->dc->getTreatedNumber();
